@@ -52,6 +52,9 @@
             <br />
             <label>
                 <input type="checkbox" id="checkBoldFooter" /> Bold last row</label>
+            <br />
+            <label>
+                <input type="checkbox" id="checkFormatNumbers" /> Format numbers</label>
         </div>
         <br />
         <div style="text-align:center;color:green;font-size:18px;font-weight:bold;display:none;" id="copySuccess">
@@ -94,6 +97,7 @@
     var boolBoldHeaders = true;
     var boolBoldFooter = false;
     var boolCenterText = true;
+    var boolFormatNumbers = false;
     var oldValOfText = "";
 
     $("#checkBoldHeader").on('change click', function() {
@@ -121,6 +125,16 @@
             boolCenterText = true;
         } else {
             boolCenterText = false;
+        }
+        oldValOfText = '';
+        processPastedText($("#pastedText").val());
+    });
+
+    $("#checkFormatNumbers").on('change', function() {
+        if ($(this).is(':checked')) {
+            boolFormatNumbers = true;
+        } else {
+            boolFormatNumbers = false;
         }
         oldValOfText = '';
         processPastedText($("#pastedText").val());
@@ -171,6 +185,8 @@
                     curVal = "u";
                 } else if (curVal.length === 0) {
                     curVal = " ";
+                } else if ($.isNumeric(curVal) && boolFormatNumbers) {
+                    curVal = numberWithCommas(curVal.trim());
                 }
                 curVal.replace(/_/g, "\\\_");
                 if (i == 0) {
@@ -324,6 +340,10 @@
             result.push(obj);
         }
         return result;
+    }
+
+    function numberWithCommas(x) {
+        return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     }
     </script>
 </body>
