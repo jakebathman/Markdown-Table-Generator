@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Table Maker</title>
+    <style>
+    #markdownResult {
+        padding: 5px;
+    }
+    
+    #markdownResult > table {
+        margin: auto;
+    }
+    
+    #markdownResult > table,
+    tr,
+    td,
+    th {
+        border: 1px solid #DDDDDD;
+        border-collapse: collapse;
+        font-weight: normal;
+        white-space: nowrap;
+    }
+    
+    td,
+    th {
+        padding: 3px;
+    }
+    </style>
+</head>
+
+<body id="tablemaker">
+    <div style="width:100%;max-width:800px;text-align:center;margin:auto;">
+        <br />
+        <h3 style="text-align:center;">Markdown Table Generator</h3>
+        <div id="headerColors">
+            <div style="display:inline-block;background-color:green;width:20%!important;height:6px!important;"></div>
+            <div style="display:inline-block;background-color:blue;width:20%;height:6px;"></div>
+            <div style="display:inline-block;background-color:red;width:20%;height:6px;"></div>
+            <div style="display:inline-block;background-color:orange;width:20%;height:6px;"></div>
+        </div>
+        <h4 style="text-align:center;">Paste here from excel, and get a markdown-ready table below</h4>
+        <br />
+        <textarea style="width:80%;" id="pastedText" placeholder="Paste here" rows="9"></textarea>
+        <br />
+        <div style="text-align:center;">
+            <label>
+                <input type="checkbox" id="checkBoldHeader" checked /> Bold first row</label>
+            <br />
+            <label>
+                <input type="checkbox" id="checkCenterText" /> Center-align text</label>
+        </div>
+        <br />
+        <div style="text-align:center;color:green;font-size:18px;font-weight:bold;display:none;" id="copySuccess">
+            Done!
+            <br /> Press Ctr+C to copy
+        </div>
+        <div style="text-align:center;color:red;font-size:18px;font-weight:bold;display:none;" id="copyError">
+            Error!
+            <br /> Something went wrong :(
+        </div>
+        <div>
+            <textarea style="width:80%;" id="tableResult" rows="9"></textarea>
+        </div>
+        <br />
+        <div style="text-align:center;font-size:14px;display:none;" id="previewSuccess">
+            <strong>Preview of table</strong>
+            <br />
+        </div>
+        <br />
+        <div id="markdownResult" style="background-color:#ffffff;margin:auto;">
+        </div>
+    </div>
+    <div style="height:30px;"></div>
+    <hr>
+    <!-- javascript
+		================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="js/marked.min.js"></script>
+    <script>
+    function createMarkdownResult(markdownText) {
+        $("#markdownResult").html('');
+        $("#markdownResult").html(marked(markdownText));
+        $("#markdownResult").width($("#markdownResult table").width());
+    }
+
+
+
+    var arrParsedText;
+    var strParsedText;
+    var boolBoldHeaders = true;
+    var boolCenterText = false;
+    var oldValOfText = "";
+
+    $("#checkBoldHeader").on('change click', function() {
+        if ($(this).attr('checked') == "checked") {
+            boolBoldHeaders = true;
+        } else {
+            boolBoldHeaders = false;
+        }
+        oldValOfText = '';
+        processPastedText($("#pastedText").val());
+    });
+
+    $("#checkCenterText").on('change', function() {
+        if ($(this).is(':checked')) {
+            boolCenterText = true;
+        } else {
+            boolCenterText = false;
+        }
+        oldValOfText = '';
+        processPastedText($("#pastedText").val());
+    });
+
+    $("#pastedText").on('change keyup paste', function() {
+        processPastedText($(this).val());
+    });
+
+    /* **************************************************
+    	Do the legwork
+    ************************************************** */
+    function processPastedText(currentVal) {
+        if (currentVal == oldValOfText) {
+            return; //check to prevent multiple simultaneous triggers
+        }
+        oldValOfText = currentVal;
+
+        // Parse text and create tables
+        $("#tableResult").val('');
+        arrParsedText = guessDelimParse(currentVal);
+        if (arrParsedText === "error") {
+            $("#tableResult").val("Error! Make sure you're pasting from excel or pasting a comma separated table");
+            $("#copyError").show();
+            $("#copySuccess").hide();
+            $("#previewSuccess").hide();
+            $("#markdownResult").html('');
+        } else {
+            var strParsedText = arrayToMarkdownTable(arrParsedText);
+            $("#tableResult").val(strParsedText);
+            $("#tableResult").select();
+            $("#copyError").hide();
+            $("#copySuccess").show();
+            $("#previewSuccess").show();
+            createMarkdownResult(strParsedText);
+        }
+    }
+
+    /* **************************************************
+    	Convert an array of tabular values to markdown table
+    ************************************************** */
+    function arrayToMarkdownTable(arrText) {
+        var strTableOutput = "";
+        var arrSecondLine = [];
+        for (var i = 0; i < arrText.length; i++) {
+            var curLine = arrText[i];
+            if (typeof(arrText[i][curLine.length - 1]) == "undefined") {
+                break;
+            }
+            /////////////		Before combining, escape stuff		/////////////
+            for (var j = 0; j < curLine.length; j++) {
+                var curVal = curLine[j];
+                /////////////		Escape underscores		/////////////
+                if (typeof(curVal) == "undefined") {
+                    curVal = "u";
+                } else if (curVal.length === 0) {
+                    curVal = " ";
+                }
+                curVal.replace(/_/g, "\\\_");
+                if (i == 0) {
+                    if (boolBoldHeaders === true) {
+                        curVal = "**" + curVal + "**";
+                    }
+                    if (boolCenterText === true) {
+                        arrSecondLine.push(":-----:");
+                    } else {
+                        arrSecondLine.push("-----");
+                    }
+                }
+                arrText[i][j] = curVal;
+            }
+            var curLine = arrText[i];
+            var strCurLine = curLine.join("|");
+
+            if (i > 0) {
+                strTableOutput += "\n";
+            }
+            strTableOutput += strCurLine;
+            if (i == 0) {
+                strTableOutput += "\n" + arrSecondLine.join("|");
+            }
+        }
+        return strTableOutput;
+    }
+
+    /* **************************************************
+    	Take in a CSV/TSV string and guess which delimiter is used
+    ************************************************** */
+    function guessDelimParse(textToParse) {
+        var linesT = textToParse.split("\n");
+        var linesC = textToParse.split("\n");
+
+        /////////////		Get count of delim in first row		/////////////
+        var countTabs = linesT[0].split("\t").length;
+        var countCommas = linesT[0].split(",").length;
+
+        if ((countTabs <= 1) && (countCommas <= 1)) {
+            // not tabs or commas, or not tabular data
+            return "error";
+        } else if (countTabs <= 1) {
+            // delim is comma
+            return csvJSON(textToParse);
+        } else if (countCommas <= 1) {
+            // delim is tab
+            return tsvJSON(textToParse);
+        } else {
+            // inconclusive (both are > 1) so dig a bit more
+            var countTabs2 = linesT[1].split("\t").length;
+            var countCommas2 = linesT[1].split(",").length;
+
+            if (countTabs2 == countTabs) {
+                // probably tabs
+                return tsvJSON(textToParse);
+            } else if (countTabs2 == countTabs) {
+                // probably comma
+                return csvJSON(textToParse);
+            } else {
+                // still no clue!
+                return "error";
+            }
+        }
+    }
+
+    //var tsv is the TSV file with headers
+    function tsvJSON(tsv) {
+        var lines = tsv.split("\n");
+        var result = [];
+        var headers = lines[0].split("\t");
+        for (var i = 0; i < lines.length; i++) {
+            var obj = [];
+            var currentline = lines[i].split("\t");
+            for (var j = 0; j < headers.length; j++) {
+                obj.push(currentline[j]);
+            }
+            result.push(obj);
+        }
+        return result; //JavaScript object
+        //return JSON.stringify(result); //JSON
+    }
+
+    //var csv is the CSV file with headers
+    function csvJSON(csv) {
+        var lines = csv.split("\n");
+        var result = [];
+        var headers = lines[0].split(",");
+        for (var i = 1; i < lines.length; i++) {
+            var obj = [];
+            var currentline = lines[i].split(",");
+            for (var j = 0; j < headers.length; j++) {
+                obj.push(currentline[j]);
+            }
+            result.push(obj);
+        }
+        return result; //JavaScript object
+        //return JSON.stringify(result); //JSON
+    }
+    </script>
+</body>
+
+</html>
