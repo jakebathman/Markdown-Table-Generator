@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Table Maker</title>
+    <title>Markdown Table Maker</title>
     <style>
     #markdownResult {
         padding: 5px;
@@ -32,24 +32,26 @@
 
 <body id="tablemaker">
     <div style="width:100%;max-width:800px;text-align:center;margin:auto;">
-        <br />
-        <h3 style="text-align:center;">Markdown Table Generator</h3>
+        <h2 style="text-align:center;">Markdown Table Generator</h2>
         <div id="headerColors">
             <div style="display:inline-block;background-color:green;width:20%!important;height:6px!important;"></div>
             <div style="display:inline-block;background-color:blue;width:20%;height:6px;"></div>
             <div style="display:inline-block;background-color:red;width:20%;height:6px;"></div>
             <div style="display:inline-block;background-color:orange;width:20%;height:6px;"></div>
         </div>
-        <h4 style="text-align:center;">Paste here from excel, and get a markdown-ready table below</h4>
+        <h4 style="text-align:center;">Paste here from Excel or another delimited source (such as a CSV file) and get a markdown-ready table below.<br />Accepts tab-delimited and comma-delimited text.</h4>
         <br />
         <textarea style="width:80%;" id="pastedText" placeholder="Paste here" rows="9"></textarea>
         <br />
         <div style="text-align:center;">
             <label>
+                <input type="checkbox" id="checkCenterText" checked /> Center-align text</label>
+            <br />
+            <label>
                 <input type="checkbox" id="checkBoldHeader" checked /> Bold first row</label>
             <br />
             <label>
-                <input type="checkbox" id="checkCenterText" /> Center-align text</label>
+                <input type="checkbox" id="checkBoldFooter" /> Bold last row</label>
         </div>
         <br />
         <div style="text-align:center;color:green;font-size:18px;font-weight:bold;display:none;" id="copySuccess">
@@ -73,11 +75,10 @@
         </div>
     </div>
     <div style="height:30px;"></div>
-    <hr>
-    <!-- javascript
-		================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
-<script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <div style="text-align:center;">Source: <a href="https://github.com/jakebathman/Markdown-Table-Generator" target="_blank">github.com/jakebathman/Markdown-Table-Generator</a></div>
+    <!-- Local jQuery file included, but switch the comments below to load from Google's jQuery CDN instead -->
+    <!-- <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script> -->
+    <script src="js/jquery-2.1.4.min.js"></script>
     <script src="js/marked.min.js"></script>
     <script>
     function createMarkdownResult(markdownText) {
@@ -86,19 +87,28 @@
         $("#markdownResult").width($("#markdownResult table").width());
     }
 
-
-
     var arrParsedText;
     var strParsedText;
     var boolBoldHeaders = true;
-    var boolCenterText = false;
+    var boolBoldFooter = false;
+    var boolCenterText = true;
     var oldValOfText = "";
 
     $("#checkBoldHeader").on('change click', function() {
-        if ($(this).attr('checked') == "checked") {
+        if ($(this).prop('checked')) {
             boolBoldHeaders = true;
         } else {
             boolBoldHeaders = false;
+        }
+        oldValOfText = '';
+        processPastedText($("#pastedText").val());
+    });
+
+    $("#checkBoldFooter").on('change click', function() {
+        if ($(this).prop('checked')) {
+            boolBoldFooter = true;
+        } else {
+            boolBoldFooter = false;
         }
         oldValOfText = '';
         processPastedText($("#pastedText").val());
@@ -118,20 +128,16 @@
         processPastedText($(this).val());
     });
 
-    /* **************************************************
-    	Do the legwork
-    ************************************************** */
     function processPastedText(currentVal) {
         if (currentVal == oldValOfText) {
             return; //check to prevent multiple simultaneous triggers
         }
         oldValOfText = currentVal;
 
-        // Parse text and create tables
         $("#tableResult").val('');
         arrParsedText = guessDelimParse(currentVal);
         if (arrParsedText === "error") {
-            $("#tableResult").val("Error! Make sure you're pasting from excel or pasting a comma separated table");
+            $("#tableResult").val("Error! Make sure you're pasting from Excel or pasting a comma- or tab-separated table.\n\nIf you're pasting output from CLOC, only select the 'table' part, which begins and ends with ----------");
             $("#copyError").show();
             $("#copySuccess").hide();
             $("#previewSuccess").hide();
@@ -147,9 +153,6 @@
         }
     }
 
-    /* **************************************************
-    	Convert an array of tabular values to markdown table
-    ************************************************** */
     function arrayToMarkdownTable(arrText) {
         var strTableOutput = "";
         var arrSecondLine = [];
@@ -158,10 +161,10 @@
             if (typeof(arrText[i][curLine.length - 1]) == "undefined") {
                 break;
             }
-            /////////////		Before combining, escape stuff		/////////////
+            /////////////       Before combining, escape stuff      /////////////
             for (var j = 0; j < curLine.length; j++) {
                 var curVal = curLine[j];
-                /////////////		Escape underscores		/////////////
+                /////////////       Escape underscores      /////////////
                 if (typeof(curVal) == "undefined") {
                     curVal = "u";
                 } else if (curVal.length === 0) {
@@ -172,11 +175,15 @@
                     if (boolBoldHeaders === true) {
                         curVal = "**" + curVal + "**";
                     }
+                    // In here so it's done right after the header
                     if (boolCenterText === true) {
                         arrSecondLine.push(":-----:");
                     } else {
                         arrSecondLine.push("-----");
                     }
+                }
+                if (((i >= (arrText.length - 1)) || (typeof(arrText[i + 1][curLine.length - 1]) == "undefined")) && (boolBoldFooter == true)) {
+                    curVal = "**" + curVal + "**";
                 }
                 arrText[i][j] = curVal;
             }
@@ -194,46 +201,44 @@
         return strTableOutput;
     }
 
-    /* **************************************************
-    	Take in a CSV/TSV string and guess which delimiter is used
-    ************************************************** */
     function guessDelimParse(textToParse) {
         var linesT = textToParse.split("\n");
         var linesC = textToParse.split("\n");
 
-        /////////////		Get count of delim in first row		/////////////
         var countTabs = linesT[0].split("\t").length;
         var countCommas = linesT[0].split(",").length;
+        var countDashes = linesT[0].split("-").length;
+        var countSpaces = linesT[0].split(" ").length;
 
-        if ((countTabs <= 1) && (countCommas <= 1)) {
-            // not tabs or commas, or not tabular data
+        if (linesT[0].indexOf("http://cloc.sourceforge.net") != -1) {
             return "error";
-        } else if (countTabs <= 1) {
-            // delim is comma
+        } else if ((countTabs <= 1) && (countCommas <= 1) && (countDashes <= 1) && (countSpaces <= 1)) {
+            return "error";
+        } else if ((countDashes > countCommas) && (countDashes > countTabs)) {
+            return clocJSON(textToParse);
+        } else if (countCommas > 1) {
             return csvJSON(textToParse);
-        } else if (countCommas <= 1) {
-            // delim is tab
+        } else if (countTabs > 1) {
             return tsvJSON(textToParse);
         } else {
-            // inconclusive (both are > 1) so dig a bit more
             var countTabs2 = linesT[1].split("\t").length;
             var countCommas2 = linesT[1].split(",").length;
+            var countDashes2 = linesT[1].split("-").length;
 
-            if (countTabs2 == countTabs) {
-                // probably tabs
+            if ((countTabs2 == countTabs) && (countTabs2 > 1)) {
                 return tsvJSON(textToParse);
-            } else if (countTabs2 == countTabs) {
-                // probably comma
+            } else if ((countCommas2 == countCommas) && (countCommas2 > 1)) {
                 return csvJSON(textToParse);
+            } else if ((countDashes2 == countDashes) && (countDashes2 > 1)) {
+                return clocJSON(textToParse);
             } else {
-                // still no clue!
-                return "error";
+                return ssvJSON(textToParse);
             }
         }
     }
 
-    //var tsv is the TSV file with headers
     function tsvJSON(tsv) {
+        console.log("Assuming TSV");
         var lines = tsv.split("\n");
         var result = [];
         var headers = lines[0].split("\t");
@@ -245,16 +250,15 @@
             }
             result.push(obj);
         }
-        return result; //JavaScript object
-        //return JSON.stringify(result); //JSON
+        return result;
     }
 
-    //var csv is the CSV file with headers
     function csvJSON(csv) {
+        console.log("Assuming CSV");
         var lines = csv.split("\n");
         var result = [];
         var headers = lines[0].split(",");
-        for (var i = 1; i < lines.length; i++) {
+        for (var i = 0; i < lines.length; i++) {
             var obj = [];
             var currentline = lines[i].split(",");
             for (var j = 0; j < headers.length; j++) {
@@ -262,8 +266,62 @@
             }
             result.push(obj);
         }
-        return result; //JavaScript object
-        //return JSON.stringify(result); //JSON
+        return result;
+    }
+    // parse on spaces as delimiter (requires 2+ spaces to split)
+    function ssvJSON(ssv) {
+        console.log("Assuming SSV");
+        var lines = ssv.split("\n");
+        var result = [];
+        var headers = lines[0].split(/(  )+/);
+        // Remove empty columns
+        headers = $.map(headers, function(e, i) {
+            return e.trim().length > 0 ? e.trim() : null;
+        });
+        for (var i = 0; i < lines.length; i++) {
+            var obj = [];
+            var currentline = $.map(lines[i].split(/(  )+/), function(e, i) {
+                return e.trim().length > 0 ? e.trim() : null;
+            });
+            for (var j = 0; j < headers.length; j++) {
+                obj.push(currentline[j]);
+            }
+            result.push(obj);
+        }
+        return result;
+    }
+    // Parse the CLI output from cloc (count lines of code: cloc.sourceforge.net)
+    // Major assumptions: 
+    //      pasted output will have table-like formatting lines of -------
+    //      splitting between columns can be accomplished using sequences of 5 spaces, then eliminating any "columns" that have only spaces
+    function clocJSON(cloc) {
+        console.log("Assuming CLOC");
+        var lines = cloc.split("\n");
+        var result = [];
+        if (lines[0].indexOf("-----") != -1) {
+            var headers = lines[1].split(/(  )+/);
+        } else {
+            var headers = lines[0].split(/(  )+/);
+        }
+        // Remove empty columns
+        headers = $.map(headers, function(e, i) {
+            return e.trim().length > 0 ? e.trim() : null;
+        });
+        for (var i = 0; i < lines.length; i++) {
+            if (lines[i].indexOf("---") != -1) {
+                continue;
+            }
+
+            var obj = [];
+            var currentline = $.map(lines[i].split(/(  )+/), function(e, i) {
+                return e.trim().length > 0 ? e.trim() : null;
+            });
+            for (var j = 0; j < headers.length; j++) {
+                obj.push(currentline[j]);
+            }
+            result.push(obj);
+        }
+        return result;
     }
     </script>
 </body>
