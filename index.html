@@ -45,10 +45,13 @@
         <br />
         <div style="text-align:center;">
             <label>
+                <input type="checkbox" id="checkCenterText" checked /> Center-align text</label>
+            <br />
+            <label>
                 <input type="checkbox" id="checkBoldHeader" checked /> Bold first row</label>
             <br />
             <label>
-                <input type="checkbox" id="checkCenterText" checked /> Center-align text</label>
+                <input type="checkbox" id="checkBoldFooter" /> Bold last row</label>
         </div>
         <br />
         <div style="text-align:center;color:green;font-size:18px;font-weight:bold;display:none;" id="copySuccess">
@@ -73,8 +76,6 @@
     </div>
     <div style="height:30px;"></div>
     <div style="text-align:center;">Source: <a href="https://github.com/jakebathman/Markdown-Table-Generator" target="_blank">github.com/jakebathman/Markdown-Table-Generator</a></div>
-
-
     <!-- Local jQuery file included, but switch the comments below to load from Google's jQuery CDN instead -->
     <!-- <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script> -->
     <script src="js/jquery-2.1.4.min.js"></script>
@@ -89,14 +90,25 @@
     var arrParsedText;
     var strParsedText;
     var boolBoldHeaders = true;
+    var boolBoldFooter = false;
     var boolCenterText = true;
     var oldValOfText = "";
 
     $("#checkBoldHeader").on('change click', function() {
-        if ($(this).attr('checked') == "checked") {
+        if ($(this).prop('checked')) {
             boolBoldHeaders = true;
         } else {
             boolBoldHeaders = false;
+        }
+        oldValOfText = '';
+        processPastedText($("#pastedText").val());
+    });
+
+    $("#checkBoldFooter").on('change click', function() {
+        if ($(this).prop('checked')) {
+            boolBoldFooter = true;
+        } else {
+            boolBoldFooter = false;
         }
         oldValOfText = '';
         processPastedText($("#pastedText").val());
@@ -125,7 +137,7 @@
         $("#tableResult").val('');
         arrParsedText = guessDelimParse(currentVal);
         if (arrParsedText === "error") {
-            $("#tableResult").val("Error! Make sure you're pasting from excel or pasting a comma- or tab-separated table");
+            $("#tableResult").val("Error! Make sure you're pasting from Excel or pasting a comma- or tab-separated table.\n\nIf you're pasting output from CLOC, only select the 'table' part, which begins and ends with ----------");
             $("#copyError").show();
             $("#copySuccess").hide();
             $("#previewSuccess").hide();
@@ -163,11 +175,15 @@
                     if (boolBoldHeaders === true) {
                         curVal = "**" + curVal + "**";
                     }
+                    // In here so it's done right after the header
                     if (boolCenterText === true) {
                         arrSecondLine.push(":-----:");
                     } else {
                         arrSecondLine.push("-----");
                     }
+                }
+                if (((i >= (arrText.length - 1)) || (typeof(arrText[i + 1][curLine.length - 1]) == "undefined")) && (boolBoldFooter == true)) {
+                    curVal = "**" + curVal + "**";
                 }
                 arrText[i][j] = curVal;
             }
@@ -191,28 +207,38 @@
 
         var countTabs = linesT[0].split("\t").length;
         var countCommas = linesT[0].split(",").length;
+        var countDashes = linesT[0].split("-").length;
+        var countSpaces = linesT[0].split(" ").length;
 
-        if ((countTabs <= 1) && (countCommas <= 1)) {
+        if (linesT[0].indexOf("http://cloc.sourceforge.net") != -1) {
             return "error";
-        } else if (countTabs <= 1) {
+        } else if ((countTabs <= 1) && (countCommas <= 1) && (countDashes <= 1) && (countSpaces <= 1)) {
+            return "error";
+        } else if ((countDashes > countCommas) && (countDashes > countTabs)) {
+            return clocJSON(textToParse);
+        } else if (countCommas > 1) {
             return csvJSON(textToParse);
-        } else if (countCommas <= 1) {
+        } else if (countTabs > 1) {
             return tsvJSON(textToParse);
         } else {
             var countTabs2 = linesT[1].split("\t").length;
             var countCommas2 = linesT[1].split(",").length;
+            var countDashes2 = linesT[1].split("-").length;
 
-            if (countTabs2 == countTabs) {
+            if ((countTabs2 == countTabs) && (countTabs2 > 1)) {
                 return tsvJSON(textToParse);
-            } else if (countTabs2 == countTabs) {
+            } else if ((countCommas2 == countCommas) && (countCommas2 > 1)) {
                 return csvJSON(textToParse);
+            } else if ((countDashes2 == countDashes) && (countDashes2 > 1)) {
+                return clocJSON(textToParse);
             } else {
-                return "error";
+                return ssvJSON(textToParse);
             }
         }
     }
 
     function tsvJSON(tsv) {
+        console.log("Assuming TSV");
         var lines = tsv.split("\n");
         var result = [];
         var headers = lines[0].split("\t");
@@ -228,12 +254,68 @@
     }
 
     function csvJSON(csv) {
+        console.log("Assuming CSV");
         var lines = csv.split("\n");
         var result = [];
         var headers = lines[0].split(",");
         for (var i = 0; i < lines.length; i++) {
             var obj = [];
             var currentline = lines[i].split(",");
+            for (var j = 0; j < headers.length; j++) {
+                obj.push(currentline[j]);
+            }
+            result.push(obj);
+        }
+        return result;
+    }
+    // parse on spaces as delimiter (requires 2+ spaces to split)
+    function ssvJSON(ssv) {
+        console.log("Assuming SSV");
+        var lines = ssv.split("\n");
+        var result = [];
+        var headers = lines[0].split(/(  )+/);
+        // Remove empty columns
+        headers = $.map(headers, function(e, i) {
+            return e.trim().length > 0 ? e.trim() : null;
+        });
+        for (var i = 0; i < lines.length; i++) {
+            var obj = [];
+            var currentline = $.map(lines[i].split(/(  )+/), function(e, i) {
+                return e.trim().length > 0 ? e.trim() : null;
+            });
+            for (var j = 0; j < headers.length; j++) {
+                obj.push(currentline[j]);
+            }
+            result.push(obj);
+        }
+        return result;
+    }
+    // Parse the CLI output from cloc (count lines of code: cloc.sourceforge.net)
+    // Major assumptions: 
+    //      pasted output will have table-like formatting lines of -------
+    //      splitting between columns can be accomplished using sequences of 5 spaces, then eliminating any "columns" that have only spaces
+    function clocJSON(cloc) {
+        console.log("Assuming CLOC");
+        var lines = cloc.split("\n");
+        var result = [];
+        if (lines[0].indexOf("-----") != -1) {
+            var headers = lines[1].split(/(  )+/);
+        } else {
+            var headers = lines[0].split(/(  )+/);
+        }
+        // Remove empty columns
+        headers = $.map(headers, function(e, i) {
+            return e.trim().length > 0 ? e.trim() : null;
+        });
+        for (var i = 0; i < lines.length; i++) {
+            if (lines[i].indexOf("---") != -1) {
+                continue;
+            }
+
+            var obj = [];
+            var currentline = $.map(lines[i].split(/(  )+/), function(e, i) {
+                return e.trim().length > 0 ? e.trim() : null;
+            });
             for (var j = 0; j < headers.length; j++) {
                 obj.push(currentline[j]);
             }
