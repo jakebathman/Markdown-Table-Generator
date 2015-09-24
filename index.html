@@ -2,330 +2,129 @@
 <html lang="en">
 
 <head>
-    <meta charset="utf-8">
-    <title>Markdown Table Maker</title>
-    <style>
+  <meta charset="utf-8">
+  <title>Markdown Table Maker</title>
+  <style>
     #markdownResult {
-        padding: 5px;
+      padding: 5px;
     }
     
     #markdownResult > table {
-        margin: auto;
+      margin: auto;
     }
     
     #markdownResult > table,
     tr,
     td,
     th {
-        border: 1px solid #DDDDDD;
-        border-collapse: collapse;
-        font-weight: normal;
-        white-space: nowrap;
+      border: 1px solid #DDDDDD;
+      border-collapse: collapse;
+      font-weight: normal;
+      white-space: nowrap;
     }
     
     td,
     th {
-        padding: 3px;
+      padding: 3px;
     }
-    </style>
+  </style>
 </head>
 
 <body id="tablemaker">
-    <div style="width:100%;max-width:800px;text-align:center;margin:auto;">
-        <h2 style="text-align:center;">Markdown Table Generator</h2>
-        <div id="headerColors">
-            <div style="display:inline-block;background-color:green;width:20%!important;height:6px!important;"></div>
-            <div style="display:inline-block;background-color:blue;width:20%;height:6px;"></div>
-            <div style="display:inline-block;background-color:red;width:20%;height:6px;"></div>
-            <div style="display:inline-block;background-color:orange;width:20%;height:6px;"></div>
-        </div>
-        <h4 style="text-align:center;">Paste here from Excel or another delimited source (such as a CSV file) and get a markdown-ready table below.<br />Accepts tab-delimited and comma-delimited text.</h4>
-        <br />
-        <textarea style="width:80%;" id="pastedText" placeholder="Paste here" rows="9"></textarea>
-        <br />
-        <div style="text-align:center;">
-            <label>
-                <input type="checkbox" id="checkCenterText" checked /> Center-align text</label>
-            <br />
-            <label>
-                <input type="checkbox" id="checkBoldHeader" checked /> Bold first row</label>
-            <br />
-            <label>
-                <input type="checkbox" id="checkBoldFooter" /> Bold last row</label>
-        </div>
-        <br />
-        <div style="text-align:center;color:green;font-size:18px;font-weight:bold;display:none;" id="copySuccess">
-            Done!
-            <br /> Press Ctr+C to copy
-        </div>
-        <div style="text-align:center;color:red;font-size:18px;font-weight:bold;display:none;" id="copyError">
-            Error!
-            <br /> Something went wrong :(
-        </div>
-        <div>
-            <textarea style="width:80%;" id="tableResult" rows="9"></textarea>
-        </div>
-        <br />
-        <div style="text-align:center;font-size:14px;display:none;" id="previewSuccess">
-            <strong>Preview of table</strong>
-            <br />
-        </div>
-        <br />
-        <div id="markdownResult" style="background-color:#ffffff;margin:auto;">
-        </div>
+  <div style="width:100%;max-width:800px;text-align:center;margin:auto;">
+    <h2 style="text-align:center;">Markdown Table Generator</h2>
+    <div id="headerColors">
+      <div style="display:inline-block;background-color:green;width:20%!important;height:6px!important;"></div>
+      <div style="display:inline-block;background-color:blue;width:20%;height:6px;"></div>
+      <div style="display:inline-block;background-color:red;width:20%;height:6px;"></div>
+      <div style="display:inline-block;background-color:orange;width:20%;height:6px;"></div>
     </div>
-    <div style="height:30px;"></div>
-    <div style="text-align:center;"><a href="https://github.com/jakebathman/Markdown-Table-Generator/issues/new" target="_blank">Report a bug (GitHub account required)</a></div>
+    <h4 style="text-align:center;">Paste here from Excel or another delimited source (such as a CSV file) and get a markdown-ready table below.<br />Accepts tab-delimited and comma-delimited text.</h4>
     <br />
-    <div style="text-align:center;"><a href="https://github.com/jakebathman/Markdown-Table-Generator" target="_blank">Source Code</a></div>
-    <!-- Local jQuery file included, but switch the comments below to load from Google's jQuery CDN instead -->
-    <!-- <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script> -->
-    <script src="js/jquery-2.1.4.min.js"></script>
-    <script src="js/marked.min.js"></script>
-    <script>
-    function createMarkdownResult(markdownText) {
-        $("#markdownResult").html('');
-        $("#markdownResult").html(marked(markdownText));
-        $("#markdownResult").width($("#markdownResult table").width());
-    }
+    <textarea style="width:80%;" id="pastedText" placeholder="Paste here" rows="9"></textarea>
+    <br />
+    <div style="text-align:center;">
+      <label>
+        <input type="checkbox" id="checkCenterText" checked /> Center-align text
+      </label>
+      <br />
+      <label>
+        <input type="checkbox" id="checkBoldHeader" checked /> Bold first row
+      </label>
+      <br />
+      <label>
+        <input type="checkbox" id="checkBoldFooter" /> Bold last row
+      </label>
+      <br />
+      <label>
+        <input type="checkbox" id="checkFormatNumbers" /> Format numbers
+      </label>
+      <br />
 
-    var arrParsedText;
-    var strParsedText;
-    var boolBoldHeaders = true;
-    var boolBoldFooter = false;
-    var boolCenterText = true;
-    var oldValOfText = "";
+      <h5>Wiki tables</h5>
+      <br />
+      <label>
+        <input type="checkbox" id="checkWikiFormat" /> Use Wiki table (<a href="https://en.wikipedia.org/wiki/Help:Table" target="_blank">?</a>)
+      </label>
+      <br />
+      <br />
+      <label>
+      Empty cell color <input type="text" id="emptyCellBackgroundColor" />
+      </label>
+      <br />
+      <label>
+      Header cell color <input type="text" id="headerBackgroundColor" />
+      </label>
+      <br />
+      <label>
+      Table caption <input type="text" id="inpTableCaption" disabled/> 
+      </label>
 
-    $("#checkBoldHeader").on('change click', function() {
-        if ($(this).prop('checked')) {
-            boolBoldHeaders = true;
-        } else {
-            boolBoldHeaders = false;
-        }
-        oldValOfText = '';
-        processPastedText($("#pastedText").val());
-    });
+    </div>
+    <br />
+    <div style="text-align:center;color:green;font-size:18px;font-weight:bold;display:none;" id="copySuccess">
+      Done!
+      <br /> Press Ctr+C to copy
+    </div>
+    <div style="text-align:center;color:red;font-size:18px;font-weight:bold;display:none;" id="copyError">
+      Error!
+      <br /> Something went wrong :(
+    </div>
+    <div>
+      <textarea style="width:80%;" id="tableResult" rows="9"></textarea>
+    </div>
+    <br />
+    <div style="text-align:center;font-size:14px;display:none;" id="previewSuccess">
+      <strong>Preview of table</strong>
+      <br />
+    </div>
+    <br />
+    <div id="markdownResult" style="background-color:#ffffff;margin:auto;">
+    </div>
+  </div>
+  <div style="height:30px;"></div>
+  <hr>
+  <div style="height:30px;"></div>
+  <div style="text-align:center;"><a href="https://github.com/jakebathman/Markdown-Table-Generator/issues/new" target="_blank">Report a bug (GitHub account required)</a></div>
+  <br />
+  <div style="text-align:center;"><a href="https://github.com/jakebathman/Markdown-Table-Generator" target="_blank">Source Code</a></div>
+  <br />
+  <div style="text-align:center;color:#666;">
+    <p>Copyright © 2016 Jake Bathman (<a href="https://github.com/jakebathman/">github.com/jakebathman</a>)
+    </p>
+    <p>This work is free. You can redistribute it and/or modify it under the terms of the Do What The Fuck You Want To Public License, Version 2, as published by Sam Hocevar. See <a target="_blank" href="http://www.wtfpl.net/">http://www.wtfpl.net/</a> for more details. </p>
 
-    $("#checkBoldFooter").on('change click', function() {
-        if ($(this).prop('checked')) {
-            boolBoldFooter = true;
-        } else {
-            boolBoldFooter = false;
-        }
-        oldValOfText = '';
-        processPastedText($("#pastedText").val());
-    });
+    <a target="_blank" href="http://www.wtfpl.net/"><img src="http://www.wtfpl.net/wp-content/uploads/2012/12/wtfpl-badge-1.png" width="80" height="31" alt="WTFPL" /></a>
+  </div>
+  <!-- Local jQuery file included, but switch the comments below to load from Google's jQuery CDN instead -->
+  <!-- <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script> -->
+  <script src="js/jquery-2.1.4.min.js"></script>
+  <script type="text/javascript" src="js/micromarkdown.js"></script>
+  <script src="tableMaker.js"></script>
 
-    $("#checkCenterText").on('change', function() {
-        if ($(this).is(':checked')) {
-            boolCenterText = true;
-        } else {
-            boolCenterText = false;
-        }
-        oldValOfText = '';
-        processPastedText($("#pastedText").val());
-    });
+  <script src='js/spectrum.js'></script>
+  <link rel='stylesheet' href='css/spectrum.css' />
 
-    $("#pastedText").on('change keyup paste', function() {
-        processPastedText($(this).val());
-    });
-
-    function processPastedText(currentVal) {
-        if (currentVal == oldValOfText) {
-            return; //check to prevent multiple simultaneous triggers
-        }
-        oldValOfText = currentVal;
-
-        $("#tableResult").val('');
-        arrParsedText = guessDelimParse(currentVal);
-        if (arrParsedText === "error") {
-            $("#tableResult").val("Error! Make sure you're pasting from Excel or pasting a comma- or tab-separated table.\n\nIf you're pasting output from CLOC, only select the 'table' part, which begins and ends with ----------");
-            $("#copyError").show();
-            $("#copySuccess").hide();
-            $("#previewSuccess").hide();
-            $("#markdownResult").html('');
-        } else {
-            var strParsedText = arrayToMarkdownTable(arrParsedText);
-            $("#tableResult").val(strParsedText);
-            $("#tableResult").select();
-            $("#copyError").hide();
-            $("#copySuccess").show();
-            $("#previewSuccess").show();
-            createMarkdownResult(strParsedText);
-        }
-    }
-
-    function arrayToMarkdownTable(arrText) {
-        var strTableOutput = "";
-        var arrSecondLine = [];
-        for (var i = 0; i < arrText.length; i++) {
-            var curLine = arrText[i];
-            if (typeof(arrText[i][curLine.length - 1]) == "undefined") {
-                break;
-            }
-            /////////////       Before combining, escape stuff      /////////////
-            for (var j = 0; j < curLine.length; j++) {
-                var curVal = curLine[j];
-                /////////////       Escape underscores      /////////////
-                if (typeof(curVal) == "undefined") {
-                    curVal = "u";
-                } else if (curVal.length === 0) {
-                    curVal = " ";
-                }
-                curVal.replace(/_/g, "\\\_");
-                if (i == 0) {
-                    if (boolBoldHeaders === true) {
-                        curVal = "**" + curVal + "**";
-                    }
-                    // In here so it's done right after the header
-                    if (boolCenterText === true) {
-                        arrSecondLine.push(":-----:");
-                    } else {
-                        arrSecondLine.push("-----");
-                    }
-                }
-                if (((i >= (arrText.length - 1)) || (typeof(arrText[i + 1][curLine.length - 1]) == "undefined")) && (boolBoldFooter == true)) {
-                    curVal = "**" + curVal + "**";
-                }
-                arrText[i][j] = curVal;
-            }
-            var curLine = arrText[i];
-            var strCurLine = curLine.join("|");
-
-            if (i > 0) {
-                strTableOutput += "\n";
-            }
-            strTableOutput += strCurLine;
-            if (i == 0) {
-                strTableOutput += "\n" + arrSecondLine.join("|");
-            }
-        }
-        return strTableOutput;
-    }
-
-    function guessDelimParse(textToParse) {
-        var linesT = textToParse.split("\n");
-        var linesC = textToParse.split("\n");
-
-        var countTabs = linesT[0].split("\t").length;
-        var countCommas = linesT[0].split(",").length;
-        var countDashes = linesT[0].split("-").length;
-        var countSpaces = linesT[0].split(" ").length;
-
-        if (linesT[0].indexOf("http://cloc.sourceforge.net") != -1) {
-            return "error";
-        } else if ((countTabs <= 1) && (countCommas <= 1) && (countDashes <= 1) && (countSpaces <= 1)) {
-            return "error";
-        } else if ((countDashes > countCommas) && (countDashes > countTabs)) {
-            return clocJSON(textToParse);
-        } else if (countCommas > 1) {
-            return csvJSON(textToParse);
-        } else if (countTabs > 1) {
-            return tsvJSON(textToParse);
-        } else {
-            var countTabs2 = linesT[1].split("\t").length;
-            var countCommas2 = linesT[1].split(",").length;
-            var countDashes2 = linesT[1].split("-").length;
-
-            if ((countTabs2 == countTabs) && (countTabs2 > 1)) {
-                return tsvJSON(textToParse);
-            } else if ((countCommas2 == countCommas) && (countCommas2 > 1)) {
-                return csvJSON(textToParse);
-            } else if ((countDashes2 == countDashes) && (countDashes2 > 1)) {
-                return clocJSON(textToParse);
-            } else {
-                return ssvJSON(textToParse);
-            }
-        }
-    }
-
-    function tsvJSON(tsv) {
-        console.log("Assuming TSV");
-        var lines = tsv.split("\n");
-        var result = [];
-        var headers = lines[0].split("\t");
-        for (var i = 0; i < lines.length; i++) {
-            var obj = [];
-            var currentline = lines[i].split("\t");
-            for (var j = 0; j < headers.length; j++) {
-                obj.push(currentline[j]);
-            }
-            result.push(obj);
-        }
-        return result;
-    }
-
-    function csvJSON(csv) {
-        console.log("Assuming CSV");
-        var lines = csv.split("\n");
-        var result = [];
-        var headers = lines[0].split(",");
-        for (var i = 0; i < lines.length; i++) {
-            var obj = [];
-            var currentline = lines[i].split(",");
-            for (var j = 0; j < headers.length; j++) {
-                obj.push(currentline[j]);
-            }
-            result.push(obj);
-        }
-        return result;
-    }
-    // parse on spaces as delimiter (requires 2+ spaces to split)
-    function ssvJSON(ssv) {
-        console.log("Assuming SSV");
-        var lines = ssv.split("\n");
-        var result = [];
-        var headers = lines[0].split(/(  )+/);
-        // Remove empty columns
-        headers = $.map(headers, function(e, i) {
-            return e.trim().length > 0 ? e.trim() : null;
-        });
-        for (var i = 0; i < lines.length; i++) {
-            var obj = [];
-            var currentline = $.map(lines[i].split(/(  )+/), function(e, i) {
-                return e.trim().length > 0 ? e.trim() : null;
-            });
-            for (var j = 0; j < headers.length; j++) {
-                obj.push(currentline[j]);
-            }
-            result.push(obj);
-        }
-        return result;
-    }
-    // Parse the CLI output from cloc (count lines of code: cloc.sourceforge.net)
-    // Major assumptions: 
-    //      pasted output will have table-like formatting lines of -------
-    //      splitting between columns can be accomplished using sequences of 5 spaces, then eliminating any "columns" that have only spaces
-    function clocJSON(cloc) {
-        console.log("Assuming CLOC");
-        var lines = cloc.split("\n");
-        var result = [];
-        if (lines[0].indexOf("-----") != -1) {
-            var headers = lines[1].split(/(  )+/);
-        } else {
-            var headers = lines[0].split(/(  )+/);
-        }
-        // Remove empty columns
-        headers = $.map(headers, function(e, i) {
-            return e.trim().length > 0 ? e.trim() : null;
-        });
-        for (var i = 0; i < lines.length; i++) {
-            if (lines[i].indexOf("---") != -1) {
-                continue;
-            }
-
-            var obj = [];
-            var currentline = $.map(lines[i].split(/(  )+/), function(e, i) {
-                return e.trim().length > 0 ? e.trim() : null;
-            });
-            for (var j = 0; j < headers.length; j++) {
-                obj.push(currentline[j]);
-            }
-            result.push(obj);
-        }
-        return result;
-    }
-    </script>
 </body>
 
 </html>
