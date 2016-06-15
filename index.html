@@ -59,6 +59,27 @@
       <label>
         <input type="checkbox" id="checkFormatNumbers" /> Format numbers
       </label>
+      <br />
+
+      <h5>Wiki tables</h5>
+      <br />
+      <label>
+        <input type="checkbox" id="checkWikiFormat" /> Use Wiki table (<a href="https://en.wikipedia.org/wiki/Help:Table" target="_blank">?</a>)
+      </label>
+      <br />
+      <br />
+      <label>
+      Empty cell color <input type="text" id="emptyCellBackgroundColor" />
+      </label>
+      <br />
+      <label>
+      Header cell color <input type="text" id="headerBackgroundColor" />
+      </label>
+      <br />
+      <label>
+      Table caption <input type="text" id="inpTableCaption" disabled/> 
+      </label>
+
     </div>
     <br />
     <div style="text-align:center;color:green;font-size:18px;font-weight:bold;display:none;" id="copySuccess">
@@ -100,6 +121,10 @@
   <script src="js/jquery-2.1.4.min.js"></script>
   <script type="text/javascript" src="js/micromarkdown.js"></script>
   <script src="tableMaker.js"></script>
+
+  <script src='js/spectrum.js'></script>
+  <link rel='stylesheet' href='css/spectrum.css' />
+
 </body>
 
 </html>
