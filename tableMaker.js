@@ -1,7 +1,7 @@
 function createMarkdownResult(markdownText)
 {
     $("#markdownResult").html('');
-    $("#markdownResult").html(marked(markdownText));
+    $("#markdownResult").html(micromarkdown.parse(markdownText));
     $("#markdownResult").width($("#markdownResult table").width());
 }
 
@@ -84,7 +84,6 @@ function processPastedText(currentVal)
 
     $("#tableResult").val('');
     arrParsedText = guessDelimParse(currentVal);
-    console.debug(arrParsedText);
     if (arrParsedText === "error")
     {
         $("#tableResult").val("Error! Make sure you're pasting from Excel or pasting a comma- or tab-separated table.\n\nIf you're pasting output from CLOC, only select the 'table' part, which begins and ends with ----------");
@@ -138,7 +137,10 @@ function arrayToMarkdownTable(arrText)
             {
                 if (boolBoldHeaders === true)
                 {
-                    curVal = "**" + curVal + "**";
+                    if (curVal.trim().length > 0)
+                    {
+                        curVal = "**" + curVal + "**";
+                    }
                 }
                 // In here so it's done right after the header
                 if (boolCenterText === true)
@@ -152,7 +154,10 @@ function arrayToMarkdownTable(arrText)
             }
             if (((i >= (arrText.length - 1)) || (typeof(arrText[i + 1][curLine.length - 1]) == "undefined")) && (boolBoldFooter == true))
             {
-                curVal = "**" + curVal + "**";
+                if (curVal.trim().length > 0)
+                {
+                    curVal = "**" + curVal + "**";
+                }
             }
             arrText[i][j] = curVal;
         }
