@@ -1,7 +1,17 @@
 function createMarkdownResult(markdownText)
 {
     $("#markdownResult").html('');
-    $("#markdownResult").html(micromarkdown.parse(markdownText));
+    var htmlOutput = "";
+    if (useTableFormat == 'markdown') {
+        $('#markdownResult').show();
+        $('#previewSuccess').show();
+        htmlOutput = micromarkdown.parse(markdownText);
+    }   
+    else {
+        $('#markdownResult').hide();
+        $('#previewSuccess').hide();
+        }
+    $("#markdownResult").html(htmlOutput);
     $("#markdownResult").width($("#markdownResult table").width());
 }
 
@@ -12,6 +22,130 @@ var boolBoldFooter = false;
 var boolCenterText = true;
 var boolFormatNumbers = false;
 var oldValOfText = "";
+var emptyCellBackgroundColor = '';
+var headerBackgroundColor = '';
+var strTableCaption = '';
+var elemColorPickerEmptyCell;
+var elemColorPickerHeader;
+var elemTableCaption;
+
+var useTableFormat = 'markdown';
+var tableFormat = {
+    'wiki':
+    {
+        escapePattern: '|',
+        escapeReplace: "<nowiki>|</nowiki>",
+        tableStart: '{| class="wikitable"\n',
+        tableStartCenter: '{| class="wikitable" style="text-align: center;"\n',
+        tableCaption: '|+',
+        tableRow: '\n|-\n',
+        headPre: '!',
+        headPost: '',
+        rowPre: '|',
+        rowPost: '',
+        headSep: '\n!',
+        afterHeader: false,
+        afterHeaderContent: '',
+        afterHeaderContentCenter: ':-----:',
+        afterHeaderContentLeft: ':-----',
+        afterHeaderContentRight: '-----:',
+        afterHeaderCellSep: '',
+        cellSep: '\n|',
+        tableEnd: '\n|}',
+        boldStart: "'''",
+        boldEnd: "'''",
+        cellStyleSep: '|',
+        allowStyles: true
+    },
+    'markdown':
+    {
+        escapePattern: /_/g,
+        escapeReplace: "\\\_",
+        tableStart: '',
+        tableStartCenter: '',
+        tableCaption: '',
+        tableRow: '\n',
+        headPre: '',
+        headPost: '',
+        rowPre: '',
+        rowPost: '',
+        headSep: '|',
+        afterHeader: true,
+        afterHeaderContent: '-----',
+        afterHeaderContentCenter: ':-----:',
+        afterHeaderContentLeft: ':-----',
+        afterHeaderContentRight: '-----:',
+        afterHeaderCellSep: '|',
+        cellSep: '|',
+        tableEnd: '',
+        boldStart: '**',
+        boldEnd: '**',
+        cellStyleSep: '',
+        allowStyles: false
+    }
+};
+
+$(document).ready(function()
+{
+
+    if (storageAvailable('localStorage'))
+    {
+        if (localStorage.getItem('emptyCellBackgroundColor'))
+        {
+            emptyCellBackgroundColor = localStorage.emptyCellBackgroundColor;
+        }
+        if (localStorage.getItem('headerBackgroundColor'))
+        {
+            headerBackgroundColor = localStorage.headerBackgroundColor;
+        }
+    }
+
+    // Initialize color picker plugin
+    elemTableCaption = $("#inpTableCaption");
+    elemColorPickerEmptyCell = $("#emptyCellBackgroundColor");
+    elemColorPickerHeader = $("#headerBackgroundColor");
+    elemColorPickerEmptyCell.spectrum(
+    {
+        showInput: true,
+        showAlpha: true,
+        allowEmpty: true,
+        preferredFormat: "rgb",
+        disabled: true,
+        color: emptyCellBackgroundColor
+    })
+    .on('change', function()
+    {
+        localStorage.emptyCellBackgroundColor = $(this).val();
+        emptyCellBackgroundColor = $(this).val();
+        oldValOfText = '';
+        processPastedText($("#pastedText").val());
+    });
+
+    elemColorPickerHeader.spectrum(
+    {
+        showInput: true,
+        showAlpha: true,
+        allowEmpty: true,
+        preferredFormat: "rgb",
+        disabled: true,
+        color: headerBackgroundColor
+    })
+    .on('change', function()
+    {
+        localStorage.headerBackgroundColor = $(this).val();
+        headerBackgroundColor = $(this).val();
+        oldValOfText = '';
+        processPastedText($("#pastedText").val());
+    });
+
+    elemTableCaption.on('change', function()
+    {
+        strTableCaption = $(this).val();
+        oldValOfText = '';
+        processPastedText($("#pastedText").val());
+    });
+
+});
 
 $("#checkBoldHeader").on('change click', function()
 {
@@ -69,10 +203,37 @@ $("#checkFormatNumbers").on('change', function()
     processPastedText($("#pastedText").val());
 });
 
+$("#checkWikiFormat").on('change', function()
+{
+    if ($(this).is(':checked'))
+    {
+        useTableFormat = 'wiki';
+        elemColorPickerEmptyCell.spectrum('enable');
+        elemColorPickerHeader.spectrum('enable');
+        elemTableCaption.prop(
+        {
+            'disabled': false
+        });
+    }
+    else
+    {
+        useTableFormat = 'markdown';
+        elemColorPickerEmptyCell.spectrum('disable');
+        elemColorPickerHeader.spectrum('disable');
+        elemTableCaption.prop(
+        {
+            'disabled': true
+        });
+    }
+    oldValOfText = '';
+    processPastedText($("#pastedText").val());
+});
+
 $("#pastedText").on('change keyup paste', function()
 {
     processPastedText($(this).val());
 });
+
 
 function processPastedText(currentVal)
 {
@@ -108,6 +269,7 @@ function arrayToMarkdownTable(arrText)
 {
     var strTableOutput = "";
     var arrSecondLine = [];
+    var opts = tableFormat[useTableFormat];
     for (var i = 0; i < arrText.length; i++)
     {
         var curLine = arrText[i];
@@ -132,48 +294,68 @@ function arrayToMarkdownTable(arrText)
             {
                 curVal = numberWithCommas(curVal.trim());
             }
-            curVal.replace(/_/g, "\\\_");
+            curVal = curVal.replace(opts.escapePattern, opts.escapeReplace);
             if (i == 0)
             {
                 if (boolBoldHeaders === true)
                 {
                     if (curVal.trim().length > 0)
                     {
-                        curVal = "**" + curVal + "**";
+                        curVal = opts.boldStart + curVal + opts.boldEnd;
                     }
                 }
                 // In here so it's done right after the header
-                if (boolCenterText === true)
+                if (opts.afterHeader === true)
                 {
-                    arrSecondLine.push(":-----:");
-                }
-                else
-                {
-                    arrSecondLine.push("-----");
+
+                    if (boolCenterText === true)
+                    {
+                        arrSecondLine.push(opts.afterHeaderContentCenter);
+                    }
+                    else
+                    {
+                        arrSecondLine.push(opts.afterHeaderContent);
+                    }
                 }
             }
             if (((i >= (arrText.length - 1)) || (typeof(arrText[i + 1][curLine.length - 1]) == "undefined")) && (boolBoldFooter == true))
             {
                 if (curVal.trim().length > 0)
                 {
-                    curVal = "**" + curVal + "**";
+                    curVal = opts.boldStart + curVal + opts.boldEnd;
                 }
+            }
+            if ((emptyCellBackgroundColor.length > 0) && (curVal.trim().length == 0) && (opts.allowStyles == true))
+            {
+                curVal = 'style="background: ' + emptyCellBackgroundColor + ';"' + opts.cellStyleSep + curVal;
+            }
+            if ((headerBackgroundColor.length > 0) && (i == 0) && (opts.allowStyles == true))
+            {
+                curVal = 'style="background: ' + headerBackgroundColor + ';"' + opts.cellStyleSep + curVal;
             }
             arrText[i][j] = curVal;
         }
         var curLine = arrText[i];
-        var strCurLine = curLine.join("|");
+        if (i == 0)
+        {
+            var strCurLine = opts.headPre + curLine.join(opts.headSep) + opts.headPost;
+        }
+        else
+        {
+            var strCurLine = opts.rowPre + curLine.join(opts.cellSep) + opts.rowPost;
+        }
 
         if (i > 0)
         {
-            strTableOutput += "\n";
+            strTableOutput += opts.tableRow;
         }
         strTableOutput += strCurLine;
-        if (i == 0)
+        if ((i == 0) && arrSecondLine.length > 0)
         {
-            strTableOutput += "\n" + arrSecondLine.join("|");
+            strTableOutput += "\n" + arrSecondLine.join(opts.cellSep);
         }
     }
+    strTableOutput = (boolCenterText === true ? opts.tableStartCenter : opts.tableStart) + (strTableCaption.length > 0 ? opts.tableCaption + strTableCaption + '\n' : '') + strTableOutput + opts.tableEnd;
     return strTableOutput;
 }
 
@@ -297,7 +479,7 @@ function ssvJSON(ssv)
     return result;
 }
 // Parse the CLI output from cloc (count lines of code: cloc.sourceforge.net)
-// Major assumptions: 
+// Major assumptions:
 //      pasted output will have table-like formatting lines of -------
 //      splitting between columns can be accomplished using sequences of 5 spaces, then eliminating any "columns" that have only spaces
 function clocJSON(cloc)
@@ -344,4 +526,20 @@ function numberWithCommas(x)
     var parts = x.toString().split(".");
     parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     return parts.join(".");
+}
+
+function storageAvailable(type)
+{
+    try
+    {
+        var storage = window[type],
+            x = '__storage_test__';
+        storage.setItem(x, x);
+        storage.removeItem(x);
+        return true;
+    }
+    catch (e)
+    {
+        return false;
+    }
 }
