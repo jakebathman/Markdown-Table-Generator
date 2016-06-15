@@ -1,13 +1,3 @@
-# Markdown-Table-Generator
-Generate markdown syntax tables from delimited text (TSV or CSV).
-
-Current version is v1.1.0
-
-### Try it out
-A live version of this tool is at [jakebathman.github.io/Markdown-Table-Generator](http://jakebathman.github.io/Markdown-Table-Generator/)
-
-### LICENSE
-
             DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
                     Version 2, December 2004
 
@@ -21,5 +11,4 @@ A live version of this tool is at [jakebathman.github.io/Markdown-Table-Generato
    TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
 
   0. You just DO WHAT THE FUCK YOU WANT TO.
-
 
