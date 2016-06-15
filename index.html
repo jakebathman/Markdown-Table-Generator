@@ -2,104 +2,104 @@
 <html lang="en">
 
 <head>
-    <meta charset="utf-8">
-    <title>Markdown Table Maker</title>
-    <style>
+  <meta charset="utf-8">
+  <title>Markdown Table Maker</title>
+  <style>
     #markdownResult {
-        padding: 5px;
+      padding: 5px;
     }
     
     #markdownResult > table {
-        margin: auto;
+      margin: auto;
     }
     
     #markdownResult > table,
     tr,
     td,
     th {
-        border: 1px solid #DDDDDD;
-        border-collapse: collapse;
-        font-weight: normal;
-        white-space: nowrap;
+      border: 1px solid #DDDDDD;
+      border-collapse: collapse;
+      font-weight: normal;
+      white-space: nowrap;
     }
     
     td,
     th {
-        padding: 3px;
+      padding: 3px;
     }
-    </style>
+  </style>
 </head>
 
 <body id="tablemaker">
-    <div style="width:100%;max-width:800px;text-align:center;margin:auto;">
-        <h2 style="text-align:center;">Markdown Table Generator</h2>
-        <div id="headerColors">
-            <div style="display:inline-block;background-color:green;width:20%!important;height:6px!important;"></div>
-            <div style="display:inline-block;background-color:blue;width:20%;height:6px;"></div>
-            <div style="display:inline-block;background-color:red;width:20%;height:6px;"></div>
-            <div style="display:inline-block;background-color:orange;width:20%;height:6px;"></div>
-        </div>
-        <h4 style="text-align:center;">Paste here from Excel or another delimited source (such as a CSV file) and get a markdown-ready table below.<br />Accepts tab-delimited and comma-delimited text.</h4>
-        <br />
-        <textarea style="width:80%;" id="pastedText" placeholder="Paste here" rows="9"></textarea>
-        <br />
-        <div style="text-align:center;">
-            <label>
-                <input type="checkbox" id="checkCenterText" checked /> Center-align text
-            </label>
-            <br />
-            <label>
-                <input type="checkbox" id="checkBoldHeader" checked /> Bold first row
-            </label>
-            <br />
-            <label>
-                <input type="checkbox" id="checkBoldFooter" /> Bold last row
-            </label>
-            <br />
-            <label>
-                <input type="checkbox" id="checkFormatNumbers" /> Format numbers
-            </label>
-        </div>
-        <br />
-        <div style="text-align:center;color:green;font-size:18px;font-weight:bold;display:none;" id="copySuccess">
-            Done!
-            <br /> Press Ctr+C to copy
-        </div>
-        <div style="text-align:center;color:red;font-size:18px;font-weight:bold;display:none;" id="copyError">
-            Error!
-            <br /> Something went wrong :(
-        </div>
-        <div>
-            <textarea style="width:80%;" id="tableResult" rows="9"></textarea>
-        </div>
-        <br />
-        <div style="text-align:center;font-size:14px;display:none;" id="previewSuccess">
-            <strong>Preview of table</strong>
-            <br />
-        </div>
-        <br />
-        <div id="markdownResult" style="background-color:#ffffff;margin:auto;">
-        </div>
+  <div style="width:100%;max-width:800px;text-align:center;margin:auto;">
+    <h2 style="text-align:center;">Markdown Table Generator</h2>
+    <div id="headerColors">
+      <div style="display:inline-block;background-color:green;width:20%!important;height:6px!important;"></div>
+      <div style="display:inline-block;background-color:blue;width:20%;height:6px;"></div>
+      <div style="display:inline-block;background-color:red;width:20%;height:6px;"></div>
+      <div style="display:inline-block;background-color:orange;width:20%;height:6px;"></div>
     </div>
-    <div style="height:30px;"></div>
-    <hr>
-    <div style="height:30px;"></div>
-    <div style="text-align:center;"><a href="https://github.com/jakebathman/Markdown-Table-Generator/issues/new" target="_blank">Report a bug (GitHub account required)</a></div>
+    <h4 style="text-align:center;">Paste here from Excel or another delimited source (such as a CSV file) and get a markdown-ready table below.<br />Accepts tab-delimited and comma-delimited text.</h4>
     <br />
-    <div style="text-align:center;"><a href="https://github.com/jakebathman/Markdown-Table-Generator" target="_blank">Source Code</a></div>
+    <textarea style="width:80%;" id="pastedText" placeholder="Paste here" rows="9"></textarea>
     <br />
-    <div style="text-align:center;color:#666;">
-<p>Copyright © 2016 Jake Bathman (<a href="https://github.com/jakebathman/">github.com/jakebathman</a>)
-</p>
-<p>This work is free. You can redistribute it and/or modify it under the terms of the Do What The Fuck You Want To Public License, Version 2, as published by Sam Hocevar. See <a target="_blank" href="http://www.wtfpl.net/">http://www.wtfpl.net/</a> for more details. </p>
+    <div style="text-align:center;">
+      <label>
+        <input type="checkbox" id="checkCenterText" checked /> Center-align text
+      </label>
+      <br />
+      <label>
+        <input type="checkbox" id="checkBoldHeader" checked /> Bold first row
+      </label>
+      <br />
+      <label>
+        <input type="checkbox" id="checkBoldFooter" /> Bold last row
+      </label>
+      <br />
+      <label>
+        <input type="checkbox" id="checkFormatNumbers" /> Format numbers
+      </label>
+    </div>
+    <br />
+    <div style="text-align:center;color:green;font-size:18px;font-weight:bold;display:none;" id="copySuccess">
+      Done!
+      <br /> Press Ctr+C to copy
+    </div>
+    <div style="text-align:center;color:red;font-size:18px;font-weight:bold;display:none;" id="copyError">
+      Error!
+      <br /> Something went wrong :(
+    </div>
+    <div>
+      <textarea style="width:80%;" id="tableResult" rows="9"></textarea>
+    </div>
+    <br />
+    <div style="text-align:center;font-size:14px;display:none;" id="previewSuccess">
+      <strong>Preview of table</strong>
+      <br />
+    </div>
+    <br />
+    <div id="markdownResult" style="background-color:#ffffff;margin:auto;">
+    </div>
+  </div>
+  <div style="height:30px;"></div>
+  <hr>
+  <div style="height:30px;"></div>
+  <div style="text-align:center;"><a href="https://github.com/jakebathman/Markdown-Table-Generator/issues/new" target="_blank">Report a bug (GitHub account required)</a></div>
+  <br />
+  <div style="text-align:center;"><a href="https://github.com/jakebathman/Markdown-Table-Generator" target="_blank">Source Code</a></div>
+  <br />
+  <div style="text-align:center;color:#666;">
+    <p>Copyright © 2016 Jake Bathman (<a href="https://github.com/jakebathman/">github.com/jakebathman</a>)
+    </p>
+    <p>This work is free. You can redistribute it and/or modify it under the terms of the Do What The Fuck You Want To Public License, Version 2, as published by Sam Hocevar. See <a target="_blank" href="http://www.wtfpl.net/">http://www.wtfpl.net/</a> for more details. </p>
 
- <a target="_blank" href="http://www.wtfpl.net/"><img src="http://www.wtfpl.net/wp-content/uploads/2012/12/wtfpl-badge-1.png" width="80" height="31" alt="WTFPL" /></a>
-    </div>
-    <!-- Local jQuery file included, but switch the comments below to load from Google's jQuery CDN instead -->
-    <!-- <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script> -->
-    <script src="js/jquery-2.1.4.min.js"></script>
-    <script type="text/javascript" src="js/micromarkdown.js"></script>
-    <script src="tableMaker.js"></script>
+    <a target="_blank" href="http://www.wtfpl.net/"><img src="http://www.wtfpl.net/wp-content/uploads/2012/12/wtfpl-badge-1.png" width="80" height="31" alt="WTFPL" /></a>
+  </div>
+  <!-- Local jQuery file included, but switch the comments below to load from Google's jQuery CDN instead -->
+  <!-- <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script> -->
+  <script src="js/jquery-2.1.4.min.js"></script>
+  <script type="text/javascript" src="js/micromarkdown.js"></script>
+  <script src="tableMaker.js"></script>
 </body>
 
 </html>
