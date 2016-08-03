@@ -2,15 +2,17 @@ function createMarkdownResult(markdownText)
 {
     $("#markdownResult").html('');
     var htmlOutput = "";
-    if (useTableFormat == 'markdown') {
+    if (useTableFormat == 'markdown')
+    {
         $('#markdownResult').show();
         $('#previewSuccess').show();
         htmlOutput = micromarkdown.parse(markdownText);
-    }   
-    else {
+    }
+    else
+    {
         $('#markdownResult').hide();
         $('#previewSuccess').hide();
-        }
+    }
     $("#markdownResult").html(htmlOutput);
     $("#markdownResult").width($("#markdownResult table").width());
 }
@@ -28,6 +30,7 @@ var strTableCaption = '';
 var elemColorPickerEmptyCell;
 var elemColorPickerHeader;
 var elemTableCaption;
+var delim = 'auto';
 
 var useTableFormat = 'markdown';
 var tableFormat = {
@@ -105,38 +108,38 @@ $(document).ready(function()
     elemColorPickerEmptyCell = $("#emptyCellBackgroundColor");
     elemColorPickerHeader = $("#headerBackgroundColor");
     elemColorPickerEmptyCell.spectrum(
-    {
-        showInput: true,
-        showAlpha: true,
-        allowEmpty: true,
-        preferredFormat: "rgb",
-        disabled: true,
-        color: emptyCellBackgroundColor
-    })
-    .on('change', function()
-    {
-        localStorage.emptyCellBackgroundColor = $(this).val();
-        emptyCellBackgroundColor = $(this).val();
-        oldValOfText = '';
-        processPastedText($("#pastedText").val());
-    });
+        {
+            showInput: true,
+            showAlpha: true,
+            allowEmpty: true,
+            preferredFormat: "rgb",
+            disabled: true,
+            color: emptyCellBackgroundColor
+        })
+        .on('change', function()
+        {
+            localStorage.emptyCellBackgroundColor = $(this).val();
+            emptyCellBackgroundColor = $(this).val();
+            oldValOfText = '';
+            processPastedText($("#pastedText").val());
+        });
 
     elemColorPickerHeader.spectrum(
-    {
-        showInput: true,
-        showAlpha: true,
-        allowEmpty: true,
-        preferredFormat: "rgb",
-        disabled: true,
-        color: headerBackgroundColor
-    })
-    .on('change', function()
-    {
-        localStorage.headerBackgroundColor = $(this).val();
-        headerBackgroundColor = $(this).val();
-        oldValOfText = '';
-        processPastedText($("#pastedText").val());
-    });
+        {
+            showInput: true,
+            showAlpha: true,
+            allowEmpty: true,
+            preferredFormat: "rgb",
+            disabled: true,
+            color: headerBackgroundColor
+        })
+        .on('change', function()
+        {
+            localStorage.headerBackgroundColor = $(this).val();
+            headerBackgroundColor = $(this).val();
+            oldValOfText = '';
+            processPastedText($("#pastedText").val());
+        });
 
     elemTableCaption.on('change', function()
     {
@@ -145,6 +148,17 @@ $(document).ready(function()
         processPastedText($("#pastedText").val());
     });
 
+    $("#pastedText, #tableResult").on("focus click", function()
+    {
+        $(this).select();
+    });
+
+});
+
+$("#selectDelimType").on("change", function()
+{
+    delim = $(this).val();
+    processPastedText($("#pastedText").val());
 });
 
 $("#checkBoldHeader").on('change click', function()
@@ -237,7 +251,7 @@ $("#pastedText").on('change keyup paste', function()
 
 function processPastedText(currentVal)
 {
-    if (currentVal == oldValOfText)
+    if ((currentVal == oldValOfText) && (delim == 'auto'))
     {
         return; //check to prevent multiple simultaneous triggers
     }
@@ -361,11 +375,35 @@ function arrayToMarkdownTable(arrText)
 
 function guessDelimParse(textToParse)
 {
+    if (delim != 'auto')
+    {
+        switch (delim)
+        {
+            case 'tab':
+                return tsvJSON(textToParse);
+                break;
+
+            case 'comma':
+                return csvJSON(textToParse);
+                break;
+
+            case 'space':
+                return ssvJSON(textToParse);
+                break;
+
+            default:
+                return "error";
+                break;
+        }
+
+    }
     var linesT = textToParse.split("\n");
     var linesC = textToParse.split("\n");
 
     var countTabs = linesT[0].split("\t").length;
+    var countTabs2 = linesT[0].split("\t").length;
     var countCommas = linesT[0].split(",").length;
+    var countCommas2 = linesT[0].split(",").length;
     var countDashes = linesT[0].split("-").length;
     var countSpaces = linesT[0].split(" ").length;
 
@@ -381,11 +419,11 @@ function guessDelimParse(textToParse)
     {
         return clocJSON(textToParse);
     }
-    else if (countCommas > 1)
+    else if ((countCommas > 1) && (countCommas == countCommas2))
     {
         return csvJSON(textToParse);
     }
-    else if (countTabs > 1)
+    else if ((countTabs > 1) && (countTabs == countTabs2))
     {
         return tsvJSON(textToParse);
     }
@@ -417,6 +455,7 @@ function guessDelimParse(textToParse)
 function tsvJSON(tsv)
 {
     console.log("Assuming TSV");
+    $('#selectDelimType').val('tab');
     var lines = tsv.split("\n");
     var result = [];
     var headers = lines[0].split("\t");
@@ -436,6 +475,7 @@ function tsvJSON(tsv)
 function csvJSON(csv)
 {
     console.log("Assuming CSV");
+    $('#selectDelimType').val('comma');
     var lines = csv.split("\n");
     var result = [];
     var headers = lines[0].split(",");
@@ -455,6 +495,7 @@ function csvJSON(csv)
 function ssvJSON(ssv)
 {
     console.log("Assuming SSV");
+    $('#selectDelimType').val('space');
     var lines = ssv.split("\n");
     var result = [];
     var headers = lines[0].split(/(  )+/);
@@ -485,6 +526,7 @@ function ssvJSON(ssv)
 function clocJSON(cloc)
 {
     console.log("Assuming CLOC");
+    $('#selectDelimType').val('auto');
     var lines = cloc.split("\n");
     var result = [];
     if (lines[0].indexOf("-----") != -1)
