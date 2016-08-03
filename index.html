@@ -44,6 +44,14 @@
     <textarea style="width:80%;" id="pastedText" placeholder="Paste here" rows="9"></textarea>
     <br />
     <div style="text-align:center;">
+      <label>Choose Delimiter: </label>
+      <select id="selectDelimType"> 
+      <option value='auto' selected>Auto</option>
+        <option value='tab'>Tab</option>
+        <option value='comma'>Comma</option>
+        <option value='space'>Space</option>
+      </select>
+      <br />
       <label>
         <input type="checkbox" id="checkCenterText" checked /> Center-align text
       </label>
@@ -69,15 +77,15 @@
       <br />
       <br />
       <label>
-      Empty cell color <input type="text" id="emptyCellBackgroundColor" />
+        Empty cell color <input type="text" id="emptyCellBackgroundColor" />
       </label>
       <br />
       <label>
-      Header cell color <input type="text" id="headerBackgroundColor" />
+        Header cell color <input type="text" id="headerBackgroundColor" />
       </label>
       <br />
       <label>
-      Table caption <input type="text" id="inpTableCaption" disabled/> 
+        Table caption <input type="text" id="inpTableCaption" disabled/> 
       </label>
 
     </div>
