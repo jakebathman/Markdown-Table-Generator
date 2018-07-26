@@ -491,14 +491,14 @@ function csvJSON(csv)
     }
     return result;
 }
-// parse on spaces as delimiter (requires 2+ spaces to split)
+
 function ssvJSON(ssv)
 {
     console.log("Assuming SSV");
     $('#selectDelimType').val('space');
     var lines = ssv.split("\n");
     var result = [];
-    var headers = lines[0].split(/(  )+/);
+    var headers = lines[0].split(' ');
     // Remove empty columns
     headers = $.map(headers, function(e, i)
     {
@@ -507,7 +507,7 @@ function ssvJSON(ssv)
     for (var i = 0; i < lines.length; i++)
     {
         var obj = [];
-        var currentline = $.map(lines[i].split(/(  )+/), function(e, i)
+        var currentline = $.map(lines[i].split(' '), function(e, i)
         {
             return e.trim().length > 0 ? e.trim() : null;
         });
